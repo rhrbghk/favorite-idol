@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "462331059744",
+    "project_id": "favorite-idol",
+    "storage_bucket": "favorite-idol.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:462331059744:android:29786e7f2dbb74d2e96645",
+        "android_client_info": {
+          "package_name": "com.gyuhwa.favorite_idol"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwwobGA_9usQFIZZFbmK1c7daDb0KP3HY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
