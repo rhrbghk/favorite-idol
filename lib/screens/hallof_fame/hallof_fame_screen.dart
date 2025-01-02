@@ -27,9 +27,9 @@ class HallOfFameScreen extends StatelessWidget {
 
           final items = snapshot.data!.docs
               .map((doc) => HallOfFameModel.fromMap(
-            doc.data() as Map<String, dynamic>,
-            doc.id,
-          ))
+                    doc.data() as Map<String, dynamic>,
+                    doc.id,
+                  ))
               .toList();
 
           return ListView.builder(
@@ -48,7 +48,7 @@ class HallOfFameScreen extends StatelessWidget {
                   ),
                   subtitle: Text(
                     '${item.month.year}년 ${item.month.month}월\n'
-                        '${item.votes}표',
+                    '${item.votes}표',
                   ),
                   isThreeLine: true,
                   trailing: const Icon(Icons.emoji_events, color: Colors.amber),
