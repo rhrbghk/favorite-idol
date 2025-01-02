@@ -10,6 +10,7 @@ import 'package:favorite_idol/screens/posts/post_detail_screen.dart';
 import 'package:favorite_idol/screens/rankings/daily_ranking_screen.dart';
 import 'package:favorite_idol/screens/rankings/monthly_ranking_screen.dart';
 import 'package:favorite_idol/screens/rankings/other_screen.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
@@ -136,6 +137,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
         title: const Text(
           '최애의 아이돌',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -265,9 +268,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? NetworkImage(topIdol.imageUrl) as ImageProvider
                     : const AssetImage('assets/images/placeholder.png'),
                 onBackgroundImageError: (_, __) {},
-                child: topIdol.imageUrl.isEmpty
-                    ? const Icon(Icons.person)
-                    : null,
+                child:
+                    topIdol.imageUrl.isEmpty ? const Icon(Icons.person) : null,
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -310,25 +312,25 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildMenuButton(
             context,
             '일간 랭킹',
-            Icons.star_border_purple500_sharp,
+            CupertinoIcons.star,
             const DailyRankingScreen(),
           ),
           _buildMenuButton(
             context,
             '월간 랭킹',
-            Icons.star,
+            CupertinoIcons.star_fill,
             const MonthlyRankingScreen(),
           ),
           _buildMenuButton(
             context,
             '명예의 전당',
-            Icons.chat,
+            CupertinoIcons.sparkles,
             const HallOfFameScreen(),
           ),
           _buildMenuButton(
             context,
             '투표',
-            Icons.favorite,
+            CupertinoIcons.ticket_fill,
             const OtherScreen(),
           ),
         ],
@@ -337,11 +339,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildMenuButton(
-      BuildContext context,
-      String title,
-      IconData icon,
-      Widget screen,
-      ) {
+    BuildContext context,
+    String title,
+    IconData icon,
+    Widget screen,
+  ) {
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -405,9 +407,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 try {
                   final userData =
-                  userSnapshot.data!.data() as Map<String, dynamic>;
+                      userSnapshot.data!.data() as Map<String, dynamic>;
                   final favoriteIdols =
-                  List<String>.from(userData['favoriteIdols'] ?? []);
+                      List<String>.from(userData['favoriteIdols'] ?? []);
 
                   if (favoriteIdols.isEmpty) {
                     return const Center(child: Text('아이돌을 선택해주세요'));
@@ -539,26 +541,27 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(8)),
                 child: post.imageUrls.isNotEmpty
                     ? Image.network(
-                  post.imageUrls[0],
-                  height: 120,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 120,
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.error),
-                    );
-                  },
-                )
+                        post.imageUrls[0],
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 120,
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.error),
+                          );
+                        },
+                      )
                     : Container(
-                  height: 120,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.image),
-                ),
+                        height: 120,
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.image),
+                      ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
