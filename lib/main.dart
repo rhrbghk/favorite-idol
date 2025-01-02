@@ -39,14 +39,18 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Favorite Idol App',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: const Color(0XFF5f3d7a)),
           useMaterial3: true,
         ),
-        home: Consumer<AuthProvider>( // 명시적으로 AuthProvider 타입 지정
-          builder: (context, authProvider, _) { // 변수명도 더 명확하게 변경
-            return StreamBuilder<auth.User?>( // User 타입 명시적 지정
+        home: Consumer<AuthProvider>(
+          // 명시적으로 AuthProvider 타입 지정
+          builder: (context, authProvider, _) {
+            // 변수명도 더 명확하게 변경
+            return StreamBuilder<auth.User?>(
+              // User 타입 명시적 지정
               stream: auth.FirebaseAuth.instance.authStateChanges(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting ||

@@ -2,6 +2,7 @@ import 'package:favorite_idol/screens/chat/chat_list_screen.dart';
 import 'package:favorite_idol/screens/home/home_screen.dart';
 import 'package:favorite_idol/screens/profile/profile_screen.dart';
 import 'package:favorite_idol/screens/search/search_screen.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class MainScreen extends StatefulWidget {
@@ -35,19 +36,19 @@ class _MainScreenState extends State<MainScreen> {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(CupertinoIcons.home),
             label: '홈',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
+            icon: Icon(CupertinoIcons.camera),
             label: '피드',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
+            icon: Icon(CupertinoIcons.chat_bubble_2),
             label: '채팅',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(CupertinoIcons.profile_circled),
             label: '프로필',
           ),
         ],
