@@ -271,16 +271,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildPostHeader(PostModel post) {
-    print('Building header for post with userId: ${post.userId}'); // 디버그 로그 추가
-
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
           .doc(post.userId)
           .snapshots(),
       builder: (context, snapshot) {
-        print('Stream builder state: hasData=${snapshot.hasData}, hasError=${snapshot.hasError}'); // 디버그 로그 추가
-
         if (!snapshot.hasData) {
           return const ListTile(
             leading: CircleAvatar(child: Icon(Icons.person)),
@@ -289,19 +285,18 @@ class _SearchScreenState extends State<SearchScreen> {
         }
 
         if (!snapshot.data!.exists) {
-          print('User document does not exist for ID: ${post.userId}'); // 디버그 로그 추가
           return ListTile(
             leading: const CircleAvatar(child: Icon(Icons.person)),
             title: const Text('사용자를 찾을 수 없습니다'),
-            subtitle: Text('User ID: ${post.userId}'), // 디버깅용 ID 표시
+            subtitle: Text('User ID: ${post.userId}'),
           );
         }
 
         try {
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final userData = UserModel.fromMap(data, snapshot.data!.id);
-
-          print('Successfully loaded user data: ${userData.nickname}'); // 디버그 로그 추가
+          final currentUser = context.read<AuthProvider>().user;
+          final isMyPost = post.userId == currentUser?.uid;
 
           return ListTile(
             leading: CircleAvatar(
@@ -313,15 +308,150 @@ class _SearchScreenState extends State<SearchScreen> {
                   : null,
             ),
             title: Text(userData.nickname),
-            trailing: IconButton(
+            trailing: PopupMenuButton(
               icon: const Icon(Icons.more_vert),
-              onPressed: () {
-                // 게시물 메뉴 구현
+              itemBuilder: (context) {
+                if (isMyPost) {
+                  return [
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 20),
+                          SizedBox(width: 8),
+                          Text('삭제하기'),
+                        ],
+                      ),
+                    ),
+                  ];
+                } else {
+                  return [
+                    const PopupMenuItem(
+                      value: 'report',
+                      child: Row(
+                        children: [
+                          Icon(Icons.report, size: 20),
+                          SizedBox(width: 8),
+                          Text('신고하기'),
+                        ],
+                      ),
+                    ),
+                  ];
+                }
+              },
+              onSelected: (value) async {
+                if (value == 'delete') {
+                  final result = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('게시글 삭제'),
+                      content: const Text('이 게시글을 삭제하시겠습니까?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('취소'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text(
+                            '삭제',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (result == true && post.id != null) {
+                    try {
+                      // 이미지 삭제
+                      for (String imageUrl in post.imageUrls) {
+                        try {
+                          final ref = FirebaseStorage.instance.refFromURL(imageUrl);
+                          await ref.delete();
+                        } catch (e) {
+                          print('Error deleting image: $e');
+                        }
+                      }
+
+                      // 게시글 삭제
+                      await FirebaseFirestore.instance
+                          .collection('posts')
+                          .doc(post.id)
+                          .delete();
+
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('게시글이 삭제되었습니다')),
+                        );
+                      }
+                    } catch (e) {
+                      print('Error deleting post: $e');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('게시글 삭제 중 오류가 발생했습니다')),
+                        );
+                      }
+                    }
+                  }
+                } else if (value == 'report') {
+                  final reason = await showDialog<String>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('게시글 신고'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            title: const Text('스팸'),
+                            onTap: () => Navigator.pop(context, 'spam'),
+                          ),
+                          ListTile(
+                            title: const Text('불건전한 내용'),
+                            onTap: () => Navigator.pop(context, 'inappropriate'),
+                          ),
+                          ListTile(
+                            title: const Text('혐오 발언'),
+                            onTap: () => Navigator.pop(context, 'hate'),
+                          ),
+                          ListTile(
+                            title: const Text('기타'),
+                            onTap: () => Navigator.pop(context, 'other'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+
+                  if (reason != null && post.id != null && context.mounted) {
+                    try {
+                      await FirebaseFirestore.instance.collection('reports').add({
+                        'postId': post.id,
+                        'reporterId': currentUser?.uid,
+                        'reason': reason,
+                        'createdAt': FieldValue.serverTimestamp(),
+                      });
+
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('신고가 접수되었습니다')),
+                        );
+                      }
+                    } catch (e) {
+                      print('Error reporting post: $e');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('신고 중 오류가 발생했습니다')),
+                        );
+                      }
+                    }
+                  }
+                }
               },
             ),
           );
         } catch (e) {
-          print('Error parsing user data: $e'); // 디버그 로그 추가
+          print('Error parsing user data: $e');
           return const ListTile(
             leading: CircleAvatar(child: Icon(Icons.person)),
             title: Text('데이터 로드 오류'),

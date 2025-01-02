@@ -137,6 +137,16 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                         final timestamp = comment['createdAt'] as Timestamp?;
 
                         return ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage: userSnapshot.hasData &&
+                                (userSnapshot.data!.data() as Map<String, dynamic>)['profileImage'] != null
+                                ? NetworkImage((userSnapshot.data!.data() as Map<String, dynamic>)['profileImage'])
+                                : null,
+                            child: !userSnapshot.hasData ||
+                                (userSnapshot.data!.data() as Map<String, dynamic>)['profileImage'] == null
+                                ? const Icon(Icons.person)
+                                : null,
+                          ),
                           title: Text(
                             userName,
                             style: const TextStyle(fontWeight: FontWeight.bold),
