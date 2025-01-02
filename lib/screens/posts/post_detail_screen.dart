@@ -1,6 +1,7 @@
 import 'package:favorite_idol/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -8,6 +9,92 @@ class PostDetailScreen extends StatelessWidget {
   final DocumentSnapshot post;
 
   const PostDetailScreen({super.key, required this.post});
+
+  Future<void> _deletePost(BuildContext context, Map<String, dynamic> postData) async {
+    try {
+      // 이미지 삭제
+      for (String imageUrl in postData['imageUrls']) {
+        try {
+          final ref = FirebaseStorage.instance.refFromURL(imageUrl);
+          await ref.delete();
+        } catch (e) {
+          print('Error deleting image: $e');
+        }
+      }
+
+      // Firestore 문서 삭제
+      await post.reference.delete();
+
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('게시글이 삭제되었습니다')),
+        );
+      }
+    } catch (e) {
+      print('Error deleting post: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('게시글 삭제 중 오류가 발생했습니다')),
+        );
+      }
+    }
+  }
+
+  Future<void> _reportPost(BuildContext context) async {
+    final currentUser = context.read<AuthProvider>().user;
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('게시글 신고'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('스팸'),
+              onTap: () => Navigator.pop(context, 'spam'),
+            ),
+            ListTile(
+              title: const Text('불건전한 내용'),
+              onTap: () => Navigator.pop(context, 'inappropriate'),
+            ),
+            ListTile(
+              title: const Text('혐오 발언'),
+              onTap: () => Navigator.pop(context, 'hate'),
+            ),
+            ListTile(
+              title: const Text('기타'),
+              onTap: () => Navigator.pop(context, 'other'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (reason != null && context.mounted) {
+      try {
+        await FirebaseFirestore.instance.collection('reports').add({
+          'postId': post.id,
+          'reporterId': currentUser?.uid,
+          'reason': reason,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('신고가 접수되었습니다')),
+          );
+        }
+      } catch (e) {
+        print('Error reporting post: $e');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('신고 중 오류가 발생했습니다')),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,26 +109,47 @@ class PostDetailScreen extends StatelessWidget {
         ),
       );
     }
+
+    final currentUser = context.read<AuthProvider>().user;
+    final isMyPost = postData['userId'] == currentUser?.uid;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(postData['categoryName'] ?? '게시글'),
         actions: [
           PopupMenuButton(
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'bookmark',
-                child: Text('북마크'),
-              ),
-              // user?.uid 대신 안전한 비교
-              if (postData['userId'] == context.read<AuthProvider>().user?.uid)
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Text('삭제'),
-                ),
-            ],
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) {
+              if (isMyPost) {
+                return [
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete, size: 20),
+                        SizedBox(width: 8),
+                        Text('삭제하기'),
+                      ],
+                    ),
+                  ),
+                ];
+              } else {
+                return [
+                  const PopupMenuItem(
+                    value: 'report',
+                    child: Row(
+                      children: [
+                        Icon(Icons.report, size: 20),
+                        SizedBox(width: 8),
+                        Text('신고하기'),
+                      ],
+                    ),
+                  ),
+                ];
+              }
+            },
             onSelected: (value) async {
               if (value == 'delete') {
-                // 삭제 확인 다이얼로그
                 final result = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -54,20 +162,20 @@ class PostDetailScreen extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('삭제', style: TextStyle(color: Colors.red)),
+                        child: const Text(
+                          '삭제',
+                          style: TextStyle(color: Colors.red),
+                        ),
                       ),
                     ],
                   ),
                 );
 
                 if (result == true) {
-                  await post.reference.delete();
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
+                  await _deletePost(context, postData);
                 }
-              } else if (value == 'bookmark') {
-                // 북마크 기능 구현
+              } else if (value == 'report') {
+                await _reportPost(context);
               }
             },
           ),
@@ -268,9 +376,9 @@ class PostDetailScreen extends StatelessWidget {
                   contentPadding: EdgeInsets.symmetric(horizontal: 16),
                 ),
                 onSubmitted: (text) async {
-                  if (text.isNotEmpty) {
+                  if (text.isNotEmpty && currentUser != null) {
                     await post.reference.collection('comments').add({
-                      'userId': '현재 로그인한 유저 ID',
+                      'userId': currentUser.uid,
                       'text': text,
                       'createdAt': FieldValue.serverTimestamp(),
                     });
