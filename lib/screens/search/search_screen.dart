@@ -103,6 +103,21 @@ class _SearchScreenState extends State<SearchScreen> {
                   return;
                 }
 
+                // 중복 이름 체크
+                final snapshot = await FirebaseFirestore.instance
+                    .collection('categories')
+                    .where('name', isEqualTo: nameController.text.trim())
+                    .get();
+
+                if (snapshot.docs.isNotEmpty) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('이미 존재하는 아이돌 이름입니다')),
+                    );
+                  }
+                  return;
+                }
+
                 try {
                   showDialog(
                     context: context,
@@ -131,7 +146,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
                     final categoryData = CategoryModel(
                       id: categoryRef.id,
-                      name: nameController.text,
+                      name: nameController.text.trim(),
                       imageUrl: imageUrl,
                       createdAt: DateTime.now(),
                       dailyVotes: 0,
@@ -149,7 +164,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
                     transaction.set(chatRoomRef, {
                       'categoryId': categoryRef.id,
-                      'categoryName': nameController.text,
+                      'categoryName': nameController.text.trim(),
                       'categoryImage': imageUrl,
                       'participantsCount': 0,
                       'createdAt': FieldValue.serverTimestamp(),
