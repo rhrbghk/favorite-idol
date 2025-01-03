@@ -139,9 +139,10 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         scrolledUnderElevation: 0,
-        title: const Text(
-          '최애의 아이돌',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Image.asset(
+          'assets/images/fa_icon_land_text_ver2.png',
+          height: 28, // AppBar 높이에 맞게 적절한 크기 설정
+          fit: BoxFit.contain, // 이미지 비율 유지하면서 맞춤
         ),
         actions: [
           if (user != null)
@@ -590,7 +591,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.chat_bubble_outline, size: 16),
+                        const Icon(CupertinoIcons.bubble_left, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           '${post.comments}',
