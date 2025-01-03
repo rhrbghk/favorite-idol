@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-// 매일 00시 - 일간 랭킹 초기화
+// 매일 00시 - 일간 랭킹 초기화 및 일간 명예의 전당 등록
 exports.resetDailyVotes = functions.pubsub
  .schedule('0 0 * * *')  // 매일 00:00
  .timeZone('Asia/Seoul')
@@ -11,6 +11,40 @@ exports.resetDailyVotes = functions.pubsub
    const db = admin.firestore();
 
    try {
+     // 1. 일간 1등 찾기 (초기화 전)
+     const topCategoriesSnapshot = await db
+       .collection('categories')
+       .orderBy('dailyVotes', 'desc')
+       .get();
+
+     if (!topCategoriesSnapshot.empty) {
+       const highestVotes = topCategoriesSnapshot.docs[0].data().dailyVotes;
+
+       // 1표 이상인 경우에만 처리
+       if (highestVotes >= 1) {
+         // 동점자 모두 찾기
+         const winners = topCategoriesSnapshot.docs.filter(
+           doc => doc.data().dailyVotes === highestVotes
+         );
+
+         // 각 우승자를 일간 명예의 전당에 추가
+         for (const winner of winners) {
+           const winnerData = winner.data();
+           await db.collection('dailyHallOfFame').add({
+             categoryId: winner.id,
+             categoryName: winnerData.name,
+             categoryImage: winnerData.imageUrl,
+             votes: winnerData.dailyVotes,
+             date: admin.firestore.Timestamp.now(),
+             createdAt: admin.firestore.FieldValue.serverTimestamp()
+           });
+
+           console.log(`Added ${winnerData.name} to Daily Hall of Fame with ${winnerData.dailyVotes} votes`);
+         }
+       }
+     }
+
+     // 2. 일간 투표 초기화
      const snapshot = await db.collection('categories').get();
      const batch = db.batch();
 
@@ -23,7 +57,7 @@ exports.resetDailyVotes = functions.pubsub
      await batch.commit();
      console.log('Daily votes reset successful');
 
-     // 사용자 투표권 초기화
+     // 3. 사용자 투표권 초기화
      const usersSnapshot = await db.collection('users').get();
      const usersBatch = db.batch();
 
@@ -77,39 +111,43 @@ exports.resetMonthlyVotes = functions.pubsub
    const db = admin.firestore();
 
    try {
-     // 1. 지난 달의 1등 찾기 (초기화 전에 실행)
-     const topCategorySnapshot = await db
+     // 1. 월간 1등 찾기 (초기화 전)
+     const topCategoriesSnapshot = await db
        .collection('categories')
        .orderBy('monthlyVotes', 'desc')
-       .limit(1)
        .get();
 
-     if (!topCategorySnapshot.empty) {
-       const winner = topCategorySnapshot.docs[0];
-       const winnerData = winner.data();
+     if (!topCategoriesSnapshot.empty) {
+       const highestVotes = topCategoriesSnapshot.docs[0].data().monthlyVotes;
 
-       // 최소 투표 수 체크 (예: 10표 이상으로 낮춤)
-       if (winnerData.monthlyVotes >= 10) {
+       // 1표 이상인 경우에만 처리
+       if (highestVotes >= 1) {
+         // 동점자 모두 찾기
+         const winners = topCategoriesSnapshot.docs.filter(
+           doc => doc.data().monthlyVotes === highestVotes
+         );
+
          const lastMonth = new Date();
          lastMonth.setMonth(lastMonth.getMonth() - 1);
 
-         // 2. 명예의 전당에 추가
-         await db.collection('hallOfFame').add({
-           categoryId: winner.id,
-           categoryName: winnerData.name,
-           categoryImage: winnerData.imageUrl,
-           votes: winnerData.monthlyVotes,
-           month: new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1),
-           createdAt: admin.firestore.FieldValue.serverTimestamp()
-         });
+         // 각 우승자를 명예의 전당에 추가
+         for (const winner of winners) {
+           const winnerData = winner.data();
+           await db.collection('hallOfFame').add({
+             categoryId: winner.id,
+             categoryName: winnerData.name,
+             categoryImage: winnerData.imageUrl,
+             votes: winnerData.monthlyVotes,
+             month: new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1),
+             createdAt: admin.firestore.FieldValue.serverTimestamp()
+           });
 
-         console.log(`Added ${winnerData.name} to Hall of Fame with ${winnerData.monthlyVotes} votes`);
-       } else {
-         console.log(`Winner ${winnerData.name} did not meet minimum vote requirement`);
+           console.log(`Added ${winnerData.name} to Hall of Fame with ${winnerData.monthlyVotes} votes`);
+         }
        }
      }
 
-     // 3. 월간 투표 및 전체 투표 수 초기화
+     // 2. 월간 투표 및 전체 투표 수 초기화
      const snapshot = await db.collection('categories').get();
      const batch = db.batch();
 
@@ -117,7 +155,7 @@ exports.resetMonthlyVotes = functions.pubsub
        const currentData = doc.data();
        batch.update(doc.ref, {
          'monthlyVotes': 0,
-         'totalVotes': currentData.monthlyVotes || 0  // 이번달 투표수를 전체 투표수로 설정
+         'totalVotes': currentData.monthlyVotes || 0
        });
      });
 
