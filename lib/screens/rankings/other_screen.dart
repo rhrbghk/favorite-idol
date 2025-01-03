@@ -44,7 +44,7 @@ class OtherScreen extends StatelessWidget {
           'dailyVotes': FieldValue.increment(1),
           'weeklyVotes': FieldValue.increment(1),
           'monthlyVotes': FieldValue.increment(1),
-          'totalVotes': FieldValue.increment(1),
+          // totalVotes 제거
         });
 
         // 사용자 문서 업데이트
@@ -168,7 +168,7 @@ class OtherScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('오늘 ${category.dailyVotes}표'),
-                              Text('전체 ${category.totalVotes}표'),
+                              Text('이번달 ${category.monthlyVotes}표'),
                             ],
                           ),
                         );
