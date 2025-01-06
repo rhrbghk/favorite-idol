@@ -1,4 +1,5 @@
 import 'package:favorite_idol/screens/main/main_screen.dart';
+import 'package:favorite_idol/service/kakao_auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
@@ -17,6 +18,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  final KakaoAuthService _kakaoAuthService = KakaoAuthService();
+
 
   @override
   void initState() {
@@ -191,8 +194,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: const Color(0xFFFFE812),
                               ),
                               child: GestureDetector(
-                                onTap: () {
-                                  // 카카오 로그인 구현
+                                onTap: () async {
+                                  setState(() => _isLoading = true);
+                                  try {
+                                    final user = await _kakaoAuthService.signInWithKakao();
+
+                                    if (user != null && mounted) {
+                                      Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(builder: (context) => const MainScreen()),
+                                            (route) => false,
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('카카오 로그인 중 오류가 발생했습니다: $e')),
+                                      );
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _isLoading = false);
+                                    }
+                                  }
                                 },
                                 child: Image.asset(
                                   'assets/images/kakao_logo.png',

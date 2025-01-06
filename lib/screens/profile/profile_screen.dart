@@ -19,6 +19,7 @@ class ProfileScreen extends StatelessWidget {
     final ImagePicker picker = ImagePicker();
     final user = context.read<AuthProvider>().user;
 
+
     if (user == null) return;
 
     try {
@@ -91,7 +92,27 @@ class ProfileScreen extends StatelessWidget {
             .doc(user?.uid)
             .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.hasError) {
+            return Center(child: Text('오류가 발생했습니다: ${snapshot.error}'));
+          }
+
+          final authProvider = context.read<AuthProvider>();
+          final userModel = authProvider.userModel;
+
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            FirebaseFirestore.instance
+                .collection('users')
+                .doc(user?.uid)
+                .set({
+              'email': user?.email ?? '',
+              'nickname': userModel?.nickname ?? '',  // userModel의 nickname을 우선 사용
+              'profileImage': user?.photoURL ?? '',
+              'isAdmin': false,
+              'createdAt': FieldValue.serverTimestamp(),
+              'emailVerified': user?.emailVerified ?? false,
+              'remainingVotes': 1,
+              'isKakaoUser': userModel?.isKakaoUser ?? false,  // 카카오 유저 여부도 포함
+            });
             return const Center(child: CircularProgressIndicator());
           }
 

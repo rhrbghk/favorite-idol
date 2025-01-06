@@ -35,6 +35,16 @@
             </intent-filter>
         </activity>
 
+        <!-- 카카오 커스텀 URL 스킴 처리를 위한 Activity 추가 -->
+        <activity android:name="com.kakao.sdk.flutter.AuthCodeCustomTabsActivity">
+            <intent-filter android:label="flutter_web_auth">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kakao{e14155adbc40823ab73f69ec8257ede4}" android:host="oauth"/>
+            </intent-filter>
+        </activity>
+
         <!-- Flutter 관련 메타데이터 -->
         <meta-data
             android:name="flutterEmbedding"
@@ -49,6 +59,7 @@
         </intent>
         <!-- Google Play Services 관련 queries 추가 -->
         <package android:name="com.google.android.gms" />
+        <!-- 카카오톡 패키지 추가 -->
+        <package android:name="com.kakao.talk" />
     </queries>
-
 </manifest>
