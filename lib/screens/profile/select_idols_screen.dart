@@ -58,16 +58,23 @@ class _SelectIdolsScreenState extends State<SelectIdolsScreen> {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
-          .update({'favoriteIdols': _selectedIdols.toList()});
+          .set({
+        'favoriteIdols': _selectedIdols.toList(),
+      }, SetOptions(merge: true)); // merge: true를 추가하여 기존 데이터 유지
 
       if (mounted) {
-        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('선택한 아이돌이 저장되었습니다')),
         );
+        Navigator.pop(context);
       }
     } catch (e) {
       print('Error saving favorite idols: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('저장 중 오류가 발생했습니다')),
+        );
+      }
     }
   }
 

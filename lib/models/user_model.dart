@@ -7,7 +7,8 @@ class UserModel {
   final String? profileImage;
   final bool emailVerified;
   final DateTime createdAt;
-  final int remainingVotes;  // 남은 투표 수만 관리
+  final int remainingVotes;
+  final bool isKakaoUser;  // 추가
 
   UserModel({
     required this.uid,
@@ -17,17 +18,19 @@ class UserModel {
     required this.emailVerified,
     required this.createdAt,
     this.remainingVotes = 1,
+    this.isKakaoUser = false,  // 기본값 false
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String id) {
     return UserModel(
       uid: id,
       email: map['email'] ?? '',
-      nickname: map['nickname'] ?? '',
+      nickname: map['nickname'] ?? '',  // 빈 문자열 유지
       profileImage: map['profileImage'],
       emailVerified: map['emailVerified'] ?? false,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       remainingVotes: map['remainingVotes'] ?? 1,
+      isKakaoUser: map['isKakaoUser'] ?? false,
     );
   }
 
@@ -40,6 +43,7 @@ class UserModel {
       'emailVerified': emailVerified,
       'createdAt': Timestamp.fromDate(createdAt),
       'remainingVotes': remainingVotes,
+      'isKakaoUser': isKakaoUser,
     };
   }
 }

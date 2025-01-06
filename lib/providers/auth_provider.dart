@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User, FirebaseAuthException;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -9,10 +10,13 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   UserModel? _userModel;
   bool _isLoading = false;
+  bool _initialized = false;  // 추가
 
   User? get user => _user;
   UserModel? get userModel => _userModel;
   bool get isLoading => _isLoading;
+  bool get initialized => _initialized;  // getter 추가
+
 
   AuthProvider() {
     _initializeAuthState();
@@ -21,20 +25,22 @@ class AuthProvider with ChangeNotifier {
   void _initializeAuthState() {
     _auth.authStateChanges().listen((user) async {
       try {
-        _isLoading = true;
-        notifyListeners();
-
         _user = user;
-        if (user != null && user.emailVerified) {
-          await _loadUserData(user);
+
+        if (user != null) {
+          final doc = await _firestore.collection('users').doc(user.uid).get();
+          if (doc.exists) {
+            _userModel = UserModel.fromMap(doc.data()!, doc.id);
+          }
         } else {
           _userModel = null;
         }
+
+        _initialized = true;
+        notifyListeners();
       } catch (e) {
         print('Auth state change error: $e');
         _userModel = null;
-      } finally {
-        _isLoading = false;
         notifyListeners();
       }
     });
@@ -164,6 +170,10 @@ class AuthProvider with ChangeNotifier {
     try {
       _isLoading = true;
       notifyListeners();
+
+      // SharedPreferences에서 로그인 상태 제거
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('isLoggedIn');  // 또는 await prefs.setBool('isLoggedIn', false);
 
       if (_user != null) {
         await _updateLastLoginTime(_user!.uid);
