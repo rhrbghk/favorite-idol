@@ -1,12 +1,12 @@
-import 'package:favorite_idol/screens/main/main_screen.dart';
-import 'package:favorite_idol/service/apple_auth_sercice.dart';
-import 'package:favorite_idol/service/kakao_auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
 import 'signup_screen.dart';
+import '../../service/apple_auth_sercice.dart';
+import '../../service/kakao_auth_service.dart';
+import '../main/main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final loginType = prefs.getString('loginType');
       final user = context.read<AuthProvider>().user;
 
-      if (user != null) {
+      if (user != null && user.emailVerified) {
         if (loginType == 'kakao') {
           final isValid = await _kakaoAuthService.checkLoginStatus();
           if (!isValid) {
@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const MainScreen()),
-                (route) => false,
+            (route) => false,
           );
         }
       }
@@ -57,6 +57,39 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Widget _buildSocialButton({
+    required String imagePath,
+    required VoidCallback onPressed,
+    required Color backgroundColor,
+  }) {
+    return InkWell(
+      onTap: onPressed,
+      child: Container(
+        width: 45,
+        height: 45,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipOval(
+          child: Image.asset(
+            imagePath,
+            width: 45,
+            height: 45,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -64,9 +97,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final error = await context.read<AuthProvider>().signIn(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
+            _emailController.text.trim(),
+            _passwordController.text.trim(),
+          );
 
       if (!mounted) return;
 
@@ -77,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const MainScreen()),
-              (route) => false,
+          (route) => false,
         );
       }
     } catch (e) {
@@ -92,41 +125,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _handleAppleSignIn() async {
-    setState(() => _isLoading = true);
-    try {
-      final user = await _appleAuthService.signInWithApple();
-
-      if (user != null && mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-              (route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        // 사용자가 이해하기 쉬운 오류 메시지로 변환
-        String errorMessage = '애플 로그인 중 오류가 발생했습니다';
-        if (e.toString().contains('이미 다른 방법으로 가입된 이메일입니다')) {
-          errorMessage = '이미 다른 방법으로 가입된 이메일입니다. 다른 로그인 방법을 사용해주세요.';
-        } else if (e.toString().contains('canceled')) {
-          errorMessage = '로그인이 취소되었습니다.';
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(),
       body: StreamBuilder<auth.User?>(
         stream: auth.FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
@@ -141,22 +143,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Form(
                   key: _formKey,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        '로그인',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Image.asset(
+                        'assets/images/fa_icon_new_ver_attr1_subject.png',
+                        height: 200,
+                        width: 200,
                       ),
-                      const SizedBox(height: 32),
                       TextFormField(
                         controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: '이메일',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.email),
+                        decoration: InputDecoration(
+                          hintText: '이메일',
+                          prefixIcon: const Icon(Icons.email, size: 20),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
@@ -172,10 +172,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _passwordController,
-                        decoration: const InputDecoration(
-                          labelText: '비밀번호',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.lock),
+                        decoration: InputDecoration(
+                          hintText: '비밀번호',
+                          prefixIcon: const Icon(Icons.lock, size: 20),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         obscureText: true,
                         validator: (value) {
@@ -188,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
                       if (_isLoading)
                         const CircularProgressIndicator()
                       else
@@ -198,107 +200,107 @@ class _LoginScreenState extends State<LoginScreen> {
                               onPressed: _login,
                               style: ElevatedButton.styleFrom(
                                 minimumSize: const Size.fromHeight(50),
-                                backgroundColor: const Color(0XFFefb8da),
-                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.zero,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 2,
                               ),
-                              child: const Text('로그인'),
-                            ),
-                            const SizedBox(height: 16),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const SignUpScreen(),
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF6000AF),
+                                      Color(0xFFFF22C4)
+                                    ],
                                   ),
-                                );
-                              },
-                              child: const Text(
-                                '계정이 없으신가요? 회원가입',
-                                style: TextStyle(
-                                  color: Color(0XFF5f3d7a),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  constraints:
+                                      const BoxConstraints.expand(height: 50),
+                                  child: const Text(
+                                    '로그인',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 16),
+                                  ),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 16),
                             Row(
-                              children: const [
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text('계정이 없으신가요?'),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const SignUpScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text(
+                                    '회원가입',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            const Row(
+                              children: [
                                 Expanded(child: Divider()),
                                 Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text('또는',
-                                      style: TextStyle(color: Colors.grey)),
+                                  child: Text('또는'),
                                 ),
                                 Expanded(child: Divider()),
                               ],
                             ),
-                            const SizedBox(height: 16),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(30),
-                                color: const Color(0xFFFFE812),
-                              ),
-                              child: GestureDetector(
-                                onTap: () async {
-                                  setState(() => _isLoading = true);
-                                  try {
-                                    final user = await _kakaoAuthService.signInWithKakao();
-
+                            const SizedBox(height: 20),
+                            const Text('SNS 계정으로 로그인'),
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildSocialButton(
+                                  imagePath: 'assets/images/apple_light.png',
+                                  backgroundColor: Colors.white,
+                                  onPressed: () async {
+                                    final user = await _appleAuthService
+                                        .signInWithApple();
                                     if (user != null && mounted) {
                                       Navigator.of(context).pushAndRemoveUntil(
-                                        MaterialPageRoute(builder: (context) => const MainScreen()),
-                                            (route) => false,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const MainScreen()),
+                                        (route) => false,
                                       );
                                     }
-                                  } catch (e) {
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('카카오 로그인 중 오류가 발생했습니다: $e')),
-                                      );
-                                    }
-                                  } finally {
-                                    if (mounted) {
-                                      setState(() => _isLoading = false);
-                                    }
-                                  }
-                                },
-                                child: Image.asset(
-                                  'assets/images/kakao_logo.png',
-                                  height: 50,
-                                  width: double.infinity,
-                                  fit: BoxFit.contain,
+                                  },
                                 ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton(
-                              onPressed: _handleAppleSignIn,
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(50),
-                                backgroundColor: Colors.black,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                              ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: const [
-                                      Padding(
-                                        padding: EdgeInsets.only(left: 26),
-                                        child: Icon(Icons.apple, size: 24),
-                                      ),
-                                    ],
-                                  ),
-                                  const Text(
-                                    'Apple로 시작하기',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                const SizedBox(width: 20),
+                                _buildSocialButton(
+                                  imagePath: 'assets/images/kakao_light.png',
+                                  backgroundColor: const Color(0xFFFEE500),
+                                  onPressed: () async {
+                                    final user = await _kakaoAuthService
+                                        .signInWithKakao();
+                                    if (user != null && mounted) {
+                                      Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const MainScreen()),
+                                        (route) => false,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
                             ),
                           ],
                         ),
