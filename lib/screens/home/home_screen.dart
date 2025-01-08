@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:favorite_idol/models/category_model.dart';
 import 'package:favorite_idol/models/post_model.dart';
 import 'package:favorite_idol/models/user_model.dart';
@@ -13,6 +14,7 @@ import 'package:favorite_idol/screens/rankings/other_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -62,9 +64,14 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
+      RewardedAd? rewardedAd;
+      final adUnitId = Platform.isAndroid
+          ? 'ca-app-pub-3940256099942544/5224354917'  // Android 테스트 ID
+          : 'ca-app-pub-3940256099942544/1712485313'; // iOS 테스트 ID
+
       await showDialog(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (dialogContext) => AlertDialog(
           title: const Text('광고 시청'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -88,33 +95,56 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('취소'),
             ),
             ElevatedButton(
               onPressed: () async {
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(user.uid)
-                      .update({
-                    'remainingVotes': FieldValue.increment(1),
-                  });
+                Navigator.pop(dialogContext);
 
-                  Navigator.pop(context);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('추가 투표 기회를 획득했습니다!')),
-                    );
-                  }
-                } catch (e) {
-                  print('Error updating votes: $e');
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('오류가 발생했습니다')),
-                    );
-                  }
-                }
+                // 광고 로드
+                await RewardedAd.load(
+                  adUnitId: adUnitId,
+                  request: const AdRequest(),
+                  rewardedAdLoadCallback: RewardedAdLoadCallback(
+                    onAdLoaded: (ad) {
+                      rewardedAd = ad;
+                      rewardedAd!.show(
+                        onUserEarnedReward: (_, reward) async {
+                          try {
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(user.uid)
+                                .update({
+                              'remainingVotes': FieldValue.increment(1),
+                            });
+
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('추가 투표 기회를 획득했습니다!')),
+                              );
+                            }
+                          } catch (e) {
+                            print('Error updating votes: $e');
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('오류가 발생했습니다')),
+                              );
+                            }
+                          }
+                        },
+                      );
+                    },
+                    onAdFailedToLoad: (error) {
+                      print('Failed to load rewarded ad: ${error.message}');
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('광고 로드 중 오류가 발생했습니다')),
+                        );
+                      }
+                    },
+                  ),
+                );
               },
               child: const Text('광고 보기'),
             ),

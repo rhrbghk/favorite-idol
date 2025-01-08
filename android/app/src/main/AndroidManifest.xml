@@ -11,6 +11,11 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
+        <!-- AdMob 앱 ID -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
+
         <!-- Google Play Services 버전 메타데이터 추가 -->
         <meta-data
             android:name="com.google.android.gms.version"

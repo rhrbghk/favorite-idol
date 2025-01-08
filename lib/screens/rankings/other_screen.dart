@@ -1,12 +1,99 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../models/category_model.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 
-class OtherScreen extends StatelessWidget {
+class OtherScreen extends StatefulWidget {
   const OtherScreen({super.key});
+
+  @override
+  State<OtherScreen> createState() => _OtherScreenState();
+}
+
+class _OtherScreenState extends State<OtherScreen> {
+  RewardedAd? _rewardedAd;
+  bool _isLoading = false;
+
+  final String _rewardedAdUnitId = Platform.isAndroid
+      ? 'ca-app-pub-3940256099942544/5224354917'  // Android 테스트 ID
+      : 'ca-app-pub-3940256099942544/1712485313'; // iOS 테스트 ID
+
+  void _loadRewardedAd() {
+    setState(() => _isLoading = true);
+
+    RewardedAd.load(
+      adUnitId: _rewardedAdUnitId,
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedAd = ad;
+          setState(() => _isLoading = false);
+          _showRewardedAd();
+        },
+        onAdFailedToLoad: (error) {
+          print('Failed to load rewarded ad: ${error.message}');
+          setState(() => _isLoading = false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('광고 로드 중 오류가 발생했습니다')),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  void _showRewardedAd() {
+    if (_rewardedAd == null) return;
+
+    _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        _rewardedAd = null;
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        print('Failed to show rewarded ad: ${error.message}');
+        ad.dispose();
+        _rewardedAd = null;
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('광고 표시 중 오류가 발생했습니다')),
+          );
+        }
+      },
+    );
+
+    _rewardedAd!.show(onUserEarnedReward: (_, reward) async {
+      final user = context.read<AuthProvider>().user;
+      if (user == null) return;
+
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+          'remainingVotes': FieldValue.increment(1),
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('추가 투표 기회를 획득했습니다!')),
+          );
+        }
+      } catch (e) {
+        print('Error updating votes: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('투표권 추가 중 오류가 발생했습니다')),
+          );
+        }
+      }
+    });
+  }
 
   Future<void> _vote(BuildContext context, CategoryModel category) async {
     try {
@@ -49,87 +136,61 @@ class OtherScreen extends StatelessWidget {
         });
       });
 
-      if (context.mounted) {
-        final updatedUserDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
+      if (!context.mounted) return;
 
-        final remainingVotes = updatedUserDoc.data()?['remainingVotes'] ?? 0;
+      // 현재 사용자 데이터 가져오기
+      final currentUserDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
 
-        if (!context.mounted) return;
+      final currentUserData = UserModel.fromMap(
+        currentUserDoc.data()!,
+        currentUserDoc.id,
+      );
 
-        await showDialog(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: Text('${category.name}에게 투표했습니다!'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.check_circle_outline,
-                  color: Colors.green,
-                  size: 50,
-                ),
-                const SizedBox(height: 16),
-                const Text('광고를 시청하고 추가 투표권을 받으시겠습니까?'),
-                const SizedBox(height: 8),
-                Text(
-                  '현재 남은 투표 수: $remainingVotes',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('다음에 하기'),
+      if (!context.mounted) return;
+
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          title: Text('${category.name}에게 투표했습니다!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                color: Colors.green,
+                size: 50,
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(dialogContext);
-                  // 광고 시청 후 투표권 증가
-                  try {
-                    // 현재 투표권 확인
-                    if (!context.mounted) return;
-                    final userDoc = await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(user.uid)
-                        .get();
-
-                    if (!userDoc.exists) return;
-
-                    // 투표권 증가
-                    await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(user.uid)
-                        .update({
-                      'remainingVotes': FieldValue.increment(1),
-                    });
-
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('추가 투표 기회를 획득했습니다!')),
-                      );
-                    }
-                  } catch (e) {
-                    print('Error updating votes: $e');
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('투표권 추가 중 오류가 발생했습니다')),
-                      );
-                    }
-                  }
-                },
-                child: const Text('광고 보기'),
+              const SizedBox(height: 16),
+              const Text('광고를 시청하고 추가 투표권을 받으시겠습니까?'),
+              const SizedBox(height: 8),
+              Text(
+                '현재 남은 투표 수: ${currentUserData.remainingVotes}',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
-        );
-      }
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('다음에 하기'),
+            ),
+            ElevatedButton(
+              onPressed: _isLoading ? null : () {
+                Navigator.pop(dialogContext);
+                _loadRewardedAd();
+              },
+              child: const Text('광고 보기'),
+            ),
+          ],
+        ),
+      );
     } catch (e) {
       print('Vote error: $e');
       if (context.mounted) {
@@ -146,8 +207,6 @@ class OtherScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // build 메서드는 그대로 유지
-    // 기존 코드와 동일
     final user = context.read<AuthProvider>().user;
 
     return Scaffold(
