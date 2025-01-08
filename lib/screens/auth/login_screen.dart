@@ -1,8 +1,10 @@
 import 'package:favorite_idol/screens/main/main_screen.dart';
+import 'package:favorite_idol/service/apple_auth_sercice.dart';
 import 'package:favorite_idol/service/kakao_auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
 import 'signup_screen.dart';
 
@@ -19,19 +21,31 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   final KakaoAuthService _kakaoAuthService = KakaoAuthService();
-
+  final AppleAuthService _appleAuthService = AppleAuthService();
 
   @override
   void initState() {
     super.initState();
-    // 이미 로그인된 사용자 확인
-    Future.delayed(Duration.zero, () {
+    Future.delayed(Duration.zero, () async {
+      final prefs = await SharedPreferences.getInstance();
+      final loginType = prefs.getString('loginType');
       final user = context.read<AuthProvider>().user;
-      if (user != null && user.emailVerified) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-              (route) => false,
-        );
+
+      if (user != null) {
+        if (loginType == 'kakao') {
+          final isValid = await _kakaoAuthService.checkLoginStatus();
+          if (!isValid) {
+            await _kakaoAuthService.forceSignOut();
+            return;
+          }
+        }
+
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+                (route) => false,
+          );
+        }
       }
     });
   }
@@ -61,7 +75,6 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(content: Text(error)),
         );
       } else {
-        // 로그인 성공 시 메인 화면으로 이동
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const MainScreen()),
               (route) => false,
@@ -72,6 +85,38 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('로그인 중 오류가 발생했습니다: $e')),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = await _appleAuthService.signInWithApple();
+
+      if (user != null && mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+              (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        // 사용자가 이해하기 쉬운 오류 메시지로 변환
+        String errorMessage = '애플 로그인 중 오류가 발생했습니다';
+        if (e.toString().contains('이미 다른 방법으로 가입된 이메일입니다')) {
+          errorMessage = '이미 다른 방법으로 가입된 이메일입니다. 다른 로그인 방법을 사용해주세요.';
+        } else if (e.toString().contains('canceled')) {
+          errorMessage = '로그인이 취소되었습니다.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -227,15 +272,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 12),
                             ElevatedButton(
-                              onPressed: () {
-                                // 애플 로그인 구현
-                              },
+                              onPressed: _handleAppleSignIn,
                               style: ElevatedButton.styleFrom(
                                 minimumSize: const Size.fromHeight(50),
                                 backgroundColor: Colors.black,
                                 foregroundColor: Colors.white,
-                                padding:
-                                const EdgeInsets.symmetric(horizontal: 20),
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
                               ),
                               child: Stack(
                                 alignment: Alignment.center,

@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:favorite_idol/service/kakao_auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User, FirebaseAuthException;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,13 +13,12 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   UserModel? _userModel;
   bool _isLoading = false;
-  bool _initialized = false;  // 추가
+  bool _initialized = false;
 
   User? get user => _user;
   UserModel? get userModel => _userModel;
   bool get isLoading => _isLoading;
-  bool get initialized => _initialized;  // getter 추가
-
+  bool get initialized => _initialized;
 
   AuthProvider() {
     _initializeAuthState();
@@ -26,16 +28,28 @@ class AuthProvider with ChangeNotifier {
     _auth.authStateChanges().listen((user) async {
       try {
         _user = user;
-
         if (user != null) {
-          final doc = await _firestore.collection('users').doc(user.uid).get();
-          if (doc.exists) {
-            _userModel = UserModel.fromMap(doc.data()!, doc.id);
+          // SharedPreferences에서 로그인 타입 확인 추가
+          final prefs = await SharedPreferences.getInstance();
+          final loginType = prefs.getString('loginType');
+
+          if (loginType == 'kakao') {
+            // 카카오 토큰 확인
+            try {
+              await KakaoAuthService().checkLoginStatus();
+            } catch (e) {
+              await signOut();
+              return;
+            }
           }
+
+          await loadUserData(user);
+          await prefs.setBool('isLoggedIn', true);
         } else {
           _userModel = null;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.clear();  // 모든 로그인 상태 제거
         }
-
         _initialized = true;
         notifyListeners();
       } catch (e) {
@@ -46,27 +60,40 @@ class AuthProvider with ChangeNotifier {
     });
   }
 
-  Future<void> _loadUserData(User user) async {
+  Future<void> loadUserData(User user) async {  // private에서 public으로 변경
     try {
       final doc = await _firestore.collection('users').doc(user.uid).get();
       if (doc.exists) {
-        _userModel = UserModel.fromMap(doc.data()!, doc.id);
+        final data = doc.data()!;
+        // nickname이 비어있으면 랜덤 닉네임 생성
+        if (data['nickname']?.toString().isEmpty ?? true) {
+          final randomNickname = 'User${_generateRandomString(6)}';
+          await _firestore.collection('users').doc(user.uid).update({
+            'nickname': randomNickname
+          });
+          data['nickname'] = randomNickname;
+        }
+        _userModel = UserModel.fromMap(data, doc.id);
         await _updateLastLoginTime(user.uid);
-      } else {
-        print('User document does not exist');
-        _userModel = null;
+        notifyListeners();  // 상태 변경을 알림
       }
     } catch (e) {
-      print('Error fetching user data: $e');
+      print('Error loading user data: $e');
       _userModel = null;
+      notifyListeners();  // 에러 상태도 알림
     }
+  }
+
+  String _generateRandomString(int length) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final random = Random.secure();
+    return List.generate(length, (_) => chars[random.nextInt(chars.length)]).join();
   }
 
   Future<void> _updateLastLoginTime(String uid) async {
     try {
       await _firestore.collection('users').doc(uid).update({
         'lastLoginAt': FieldValue.serverTimestamp(),
-        'emailVerified': true,
       });
     } catch (e) {
       print('Error updating last login time: $e');
@@ -143,7 +170,7 @@ class AuthProvider with ChangeNotifier {
         return '이메일 인증이 완료되지 않았습니다.';
       }
 
-      await _loadUserData(user);
+      await loadUserData(user);
       return null;
     } on FirebaseAuthException catch (e) {
       switch (e.code) {

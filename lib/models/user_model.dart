@@ -8,7 +8,8 @@ class UserModel {
   final bool emailVerified;
   final DateTime createdAt;
   final int remainingVotes;
-  final bool isKakaoUser;  // 추가
+  final bool isKakaoUser;
+  final bool isAppleUser;  // 추가
 
   UserModel({
     required this.uid,
@@ -18,19 +19,21 @@ class UserModel {
     required this.emailVerified,
     required this.createdAt,
     this.remainingVotes = 1,
-    this.isKakaoUser = false,  // 기본값 false
+    this.isKakaoUser = false,
+    this.isAppleUser = false,  // 기본값 false
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String id) {
     return UserModel(
       uid: id,
       email: map['email'] ?? '',
-      nickname: map['nickname'] ?? '',  // 빈 문자열 유지
+      nickname: map['nickname'] ?? '',
       profileImage: map['profileImage'],
       emailVerified: map['emailVerified'] ?? false,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       remainingVotes: map['remainingVotes'] ?? 1,
       isKakaoUser: map['isKakaoUser'] ?? false,
+      isAppleUser: map['isAppleUser'] ?? false,
     );
   }
 
@@ -44,6 +47,7 @@ class UserModel {
       'createdAt': Timestamp.fromDate(createdAt),
       'remainingVotes': remainingVotes,
       'isKakaoUser': isKakaoUser,
+      'isAppleUser': isAppleUser,
     };
   }
 }

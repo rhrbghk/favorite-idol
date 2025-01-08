@@ -18,7 +18,7 @@ class ProfileScreen extends StatelessWidget {
   Future<void> _updateProfileImage(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
     final user = context.read<AuthProvider>().user;
-
+    final authProvider = context.read<AuthProvider>();  // AuthProvider 인스턴스 가져오기
 
     if (user == null) return;
 
@@ -32,14 +32,12 @@ class ProfileScreen extends StatelessWidget {
 
       if (image == null) return;
 
-      // 로딩 표시
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      // 이미지 업로드
       final storageRef = FirebaseStorage.instance
           .ref()
           .child('profiles/${user.uid}.jpg');
@@ -53,8 +51,11 @@ class ProfileScreen extends StatelessWidget {
           .doc(user.uid)
           .update({'profileImage': imageUrl});
 
+      // AuthProvider 상태 업데이트
+      await authProvider.loadUserData(user);  // 추가된 부분
+
       if (context.mounted) {
-        Navigator.pop(context); // 로딩 닫기
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('프로필 이미지가 업데이트되었습니다')),
         );
@@ -62,7 +63,7 @@ class ProfileScreen extends StatelessWidget {
     } catch (e) {
       print('Error updating profile image: $e');
       if (context.mounted) {
-        Navigator.pop(context); // 로딩 닫기
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('이미지 업데이트 중 오류가 발생했습니다')),
         );
