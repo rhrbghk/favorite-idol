@@ -9,7 +9,7 @@ class UserModel {
   final DateTime createdAt;
   final int remainingVotes;
   final bool isKakaoUser;
-  final bool isAppleUser;  // 추가
+  final bool isAppleUser;
 
   UserModel({
     required this.uid,
@@ -20,7 +20,7 @@ class UserModel {
     required this.createdAt,
     this.remainingVotes = 1,
     this.isKakaoUser = false,
-    this.isAppleUser = false,  // 기본값 false
+    this.isAppleUser = false,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String id) {
