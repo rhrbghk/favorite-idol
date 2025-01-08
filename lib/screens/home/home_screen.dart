@@ -66,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       RewardedAd? rewardedAd;
       final adUnitId = Platform.isAndroid
-          ? 'ca-app-pub-3940256099942544/5224354917'  // Android 테스트 ID
+          ? 'ca-app-pub-3940256099942544/5224354917' // Android 테스트 ID
           : 'ca-app-pub-3940256099942544/1712485313'; // iOS 테스트 ID
 
       await showDialog(
@@ -121,7 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('추가 투표 기회를 획득했습니다!')),
+                                const SnackBar(
+                                    content: Text('추가 투표 기회를 획득했습니다!')),
                               );
                             }
                           } catch (e) {
@@ -244,23 +245,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTopBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: const Color(0XFFefb8da),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '오늘의 1등 아이돌',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: const Color(0XFFefb8da),
+        ),
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '오늘의 1등 아이돌',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          _buildTopIdol(),
-        ],
+            const SizedBox(height: 16),
+            _buildTopIdol(),
+          ],
+        ),
       ),
     );
   }
@@ -386,16 +393,20 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Color(0XFFefb8da),
-              shape: BoxShape.circle,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1), // 그림자 색상
+                  blurRadius: 8, // 흐림 정도
+                  spreadRadius: 2, // 확산 정도
+                  offset: const Offset(4, 4), // X: 4, Y: 4 방향으로 그림자 이동
+                ),
+              ],
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              size: 24,
-              color: const Color(0XFF5f3d7a),
-            ),
+            child: Icon(icon, color: const Color(0XFFefb8da), size: 20),
           ),
           const SizedBox(height: 8),
           Text(

@@ -28,6 +28,14 @@ class _MainScreenState extends State<MainScreen> {
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
+        unselectedItemColor: Colors.grey,
+        selectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12,
+        ),
         currentIndex: _selectedIndex,
         onTap: (index) {
           setState(() {
@@ -36,19 +44,19 @@ class _MainScreenState extends State<MainScreen> {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.home),
+            icon: Icon(CupertinoIcons.house_alt_fill),
             label: '홈',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.camera),
+            icon: Icon(CupertinoIcons.camera_fill),
             label: '피드',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.chat_bubble_2),
+            icon: Icon(CupertinoIcons.chat_bubble_2_fill),
             label: '채팅',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.profile_circled),
+            icon: Icon(CupertinoIcons.person_crop_circle_fill),
             label: '프로필',
           ),
         ],
