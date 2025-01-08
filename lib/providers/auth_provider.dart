@@ -1,9 +1,8 @@
 import 'dart:math';
-
 import 'package:favorite_idol/service/kakao_auth_service.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User, FirebaseAuthException;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
@@ -24,17 +23,29 @@ class AuthProvider with ChangeNotifier {
     _initializeAuthState();
   }
 
+  Stream<UserModel?> get userModelStream {
+    if (_user == null) return Stream.value(null);
+
+    return _firestore
+        .collection('users')
+        .doc(_user!.uid)
+        .snapshots()
+        .map((snapshot) {
+      if (!snapshot.exists) return null;
+      _userModel = UserModel.fromMap(snapshot.data()!, snapshot.id);
+      return _userModel;
+    });
+  }
+
   void _initializeAuthState() {
     _auth.authStateChanges().listen((user) async {
       try {
         _user = user;
         if (user != null) {
-          // SharedPreferences에서 로그인 타입 확인 추가
           final prefs = await SharedPreferences.getInstance();
           final loginType = prefs.getString('loginType');
 
           if (loginType == 'kakao') {
-            // 카카오 토큰 확인
             try {
               await KakaoAuthService().checkLoginStatus();
             } catch (e) {
@@ -48,7 +59,7 @@ class AuthProvider with ChangeNotifier {
         } else {
           _userModel = null;
           final prefs = await SharedPreferences.getInstance();
-          await prefs.clear();  // 모든 로그인 상태 제거
+          await prefs.clear();
         }
         _initialized = true;
         notifyListeners();
@@ -60,12 +71,13 @@ class AuthProvider with ChangeNotifier {
     });
   }
 
-  Future<void> loadUserData(User user) async {  // private에서 public으로 변경
+  Future<void> loadUserData(User user) async {
     try {
       final doc = await _firestore.collection('users').doc(user.uid).get();
       if (doc.exists) {
         final data = doc.data()!;
-        // nickname이 비어있으면 랜덤 닉네임 생성
+        print("Loaded user data: $data");
+
         if (data['nickname']?.toString().isEmpty ?? true) {
           final randomNickname = 'User${_generateRandomString(6)}';
           await _firestore.collection('users').doc(user.uid).update({
@@ -75,12 +87,25 @@ class AuthProvider with ChangeNotifier {
         }
         _userModel = UserModel.fromMap(data, doc.id);
         await _updateLastLoginTime(user.uid);
-        notifyListeners();  // 상태 변경을 알림
+        notifyListeners();
       }
     } catch (e) {
       print('Error loading user data: $e');
       _userModel = null;
-      notifyListeners();  // 에러 상태도 알림
+      notifyListeners();
+    }
+  }
+
+  Future<void> reloadUserData() async {
+    if (_user == null) return;
+    try {
+      final doc = await _firestore.collection('users').doc(_user!.uid).get();
+      if (doc.exists) {
+        _userModel = UserModel.fromMap(doc.data()!, doc.id);
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error reloading user data: $e');
     }
   }
 
@@ -100,6 +125,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // 회원가입
   Future<String?> signUp({
     required String email,
     required String password,
@@ -152,6 +178,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // 로그인
   Future<String?> signIn(String email, String password) async {
     try {
       _isLoading = true;
@@ -193,14 +220,14 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // 로그아웃
   Future<String?> signOut() async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      // SharedPreferences에서 로그인 상태 제거
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('isLoggedIn');  // 또는 await prefs.setBool('isLoggedIn', false);
+      await prefs.remove('isLoggedIn');
 
       if (_user != null) {
         await _updateLastLoginTime(_user!.uid);
@@ -217,24 +244,6 @@ class AuthProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
-    }
-  }
-
-  Future<String?> sendPasswordResetEmail(String email) async {
-    try {
-      await _auth.sendPasswordResetEmail(email: email);
-      return null;
-    } on FirebaseAuthException catch (e) {
-      switch (e.code) {
-        case 'user-not-found':
-          return '존재하지 않는 이메일입니다.';
-        case 'invalid-email':
-          return '잘못된 이메일 형식입니다.';
-        default:
-          return '비밀번호 재설정 이메일 발송 중 오류가 발생했습니다: ${e.message}';
-      }
-    } catch (e) {
-      return '비밀번호 재설정 이메일 발송 중 오류가 발생했습니다: $e';
     }
   }
 

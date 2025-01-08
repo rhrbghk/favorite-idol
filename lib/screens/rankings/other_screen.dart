@@ -21,7 +21,6 @@ class OtherScreen extends StatelessWidget {
       }
 
       await FirebaseFirestore.instance.runTransaction((transaction) async {
-        // 트랜잭션 내에서 문서 읽기
         final userDoc = await transaction.get(
             FirebaseFirestore.instance.collection('users').doc(user.uid)
         );
@@ -39,23 +38,96 @@ class OtherScreen extends StatelessWidget {
           throw Exception('남은 투표권이 없습니다');
         }
 
-        // 카테고리 문서 업데이트
         transaction.update(categoryDoc.reference, {
           'dailyVotes': FieldValue.increment(1),
           'weeklyVotes': FieldValue.increment(1),
           'monthlyVotes': FieldValue.increment(1),
-          // totalVotes 제거
         });
 
-        // 사용자 문서 업데이트
         transaction.update(userDoc.reference, {
           'remainingVotes': FieldValue.increment(-1),
         });
       });
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${category.name}에게 투표했습니다!')),
+        final updatedUserDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        final remainingVotes = updatedUserDoc.data()?['remainingVotes'] ?? 0;
+
+        if (!context.mounted) return;
+
+        await showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text('${category.name}에게 투표했습니다!'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.green,
+                  size: 50,
+                ),
+                const SizedBox(height: 16),
+                const Text('광고를 시청하고 추가 투표권을 받으시겠습니까?'),
+                const SizedBox(height: 8),
+                Text(
+                  '현재 남은 투표 수: $remainingVotes',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('다음에 하기'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  // 광고 시청 후 투표권 증가
+                  try {
+                    // 현재 투표권 확인
+                    if (!context.mounted) return;
+                    final userDoc = await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user.uid)
+                        .get();
+
+                    if (!userDoc.exists) return;
+
+                    // 투표권 증가
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user.uid)
+                        .update({
+                      'remainingVotes': FieldValue.increment(1),
+                    });
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('추가 투표 기회를 획득했습니다!')),
+                      );
+                    }
+                  } catch (e) {
+                    print('Error updating votes: $e');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('투표권 추가 중 오류가 발생했습니다')),
+                      );
+                    }
+                  }
+                },
+                child: const Text('광고 보기'),
+              ),
+            ],
+          ),
         );
       }
     } catch (e) {
@@ -74,6 +146,8 @@ class OtherScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // build 메서드는 그대로 유지
+    // 기존 코드와 동일
     final user = context.read<AuthProvider>().user;
 
     return Scaffold(
@@ -120,10 +194,9 @@ class OtherScreen extends StatelessWidget {
 
               return Column(
                 children: [
-                  // 남은 투표권 표시
                   Container(
                     padding: const EdgeInsets.all(16),
-                    color: Color(0XFFefb8da),
+                    color: const Color(0XFFefb8da),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -139,7 +212,6 @@ class OtherScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // 아이돌 목록
                   Expanded(
                     child: ListView.builder(
                       itemCount: categories.length,
