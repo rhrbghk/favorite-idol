@@ -27,10 +27,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_formKey.currentState!.validate()) {
       try {
         final error = await context.read<AuthProvider>().signUp(
-          email: _emailController.text,
-          password: _passwordController.text,
-          nickname: _nicknameController.text,
-        );
+              email: _emailController.text,
+              password: _passwordController.text,
+              nickname: _nicknameController.text,
+            );
 
         if (error != null && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -72,10 +72,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 children: [
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: '이메일',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email),
+                    decoration: InputDecoration(
+                      hintText: '이메일',
+                      prefixIcon: const Icon(Icons.email, size: 20),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
@@ -91,10 +93,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(
-                      labelText: '비밀번호',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock),
+                    decoration: InputDecoration(
+                      hintText: '비밀번호',
+                      prefixIcon: const Icon(Icons.lock, size: 20),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     obscureText: true,
                     validator: (value) {
@@ -110,10 +114,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _nicknameController,
-                    decoration: const InputDecoration(
-                      labelText: '닉네임',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
+                    decoration: InputDecoration(
+                      hintText: '닉네임',
+                      prefixIcon: const Icon(Icons.person, size: 20),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -135,10 +141,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         onPressed: _signUp,
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size.fromHeight(50),
-                          backgroundColor: Theme.of(context).primaryColor,
-                          foregroundColor: Colors.white,
+                          padding:
+                              EdgeInsets.zero, // 패딩 제거 (Ink 크기와 버튼을 정확히 맞추기 위해)
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2, // 기존의 elevation 유지
                         ),
-                        child: const Text('회원가입'),
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6000AF), Color(0xFFFF22C4)],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Container(
+                            alignment: Alignment.center,
+                            constraints: const BoxConstraints.expand(
+                                height: 50), // 크기 고정
+                            child: const Text(
+                              '회원가입',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                          ),
+                        ),
                       );
                     },
                   ),

@@ -3,7 +3,8 @@ import 'package:favorite_idol/firebase_options.dart';
 import 'package:favorite_idol/providers/auth_provider.dart';
 import 'package:favorite_idol/screens/auth/login_screen.dart';
 import 'package:favorite_idol/screens/main/main_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseAuthException, User;
+import 'package:firebase_auth/firebase_auth.dart'
+    show FirebaseAuth, FirebaseAuthException, User;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -11,8 +12,6 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -112,7 +111,8 @@ class AuthStateHandler extends StatelessWidget {
                   return const LoginScreen();
                 }
 
-                final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+                final userData =
+                    userSnapshot.data!.data() as Map<String, dynamic>?;
                 final isKakaoUser = userData?['isKakaoUser'] ?? false;
 
                 if (isKakaoUser || user.emailVerified) {
@@ -147,7 +147,8 @@ class KakaoAuthService {
           kakao.User kakaoUser = await kakao.UserApi.instance.me();
 
           try {
-            final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+            final credential =
+                await FirebaseAuth.instance.signInWithEmailAndPassword(
               email: '${kakaoUser.id}@kakao.com',
               password: 'kakao${kakaoUser.id}',
             );
@@ -159,7 +160,8 @@ class KakaoAuthService {
             return credential.user;
           } on FirebaseAuthException catch (e) {
             if (e.code == 'user-not-found') {
-              final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+              final credential =
+                  await FirebaseAuth.instance.createUserWithEmailAndPassword(
                 email: '${kakaoUser.id}@kakao.com',
                 password: 'kakao${kakaoUser.id}',
               );
@@ -169,8 +171,10 @@ class KakaoAuthService {
                   .doc(credential.user?.uid)
                   .set({
                 'email': '${kakaoUser.id}@kakao.com',
-                'nickname': kakaoUser.kakaoAccount?.profile?.nickname ?? '카카오${kakaoUser.id}',
-                'profileImage': kakaoUser.kakaoAccount?.profile?.profileImageUrl ?? '',
+                'nickname': kakaoUser.kakaoAccount?.profile?.nickname ??
+                    '카카오${kakaoUser.id}',
+                'profileImage':
+                    kakaoUser.kakaoAccount?.profile?.profileImageUrl ?? '',
                 'createdAt': FieldValue.serverTimestamp(),
                 'remainingVotes': 1,
                 'isKakaoUser': true,
