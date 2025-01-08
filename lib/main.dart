@@ -6,18 +6,30 @@ import 'package:favorite_idol/screens/main/main_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseAuthException, User;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    // Firebase 초기화
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    // AdMob 초기화
+    try {
+      await MobileAds.instance.initialize();
+      print('AdMob initialized successfully');
+    } catch (e) {
+      print('AdMob initialization error: $e');
+    }
 
     kakao.KakaoSdk.init(nativeAppKey: 'e14155adbc40823ab73f69ec8257ede4');
 
@@ -25,7 +37,7 @@ void main() async {
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
     if (isLoggedIn) {
-      final auth = FirebaseAuth.instance;  // 명시적으로 FirebaseAuth 사용
+      final auth = FirebaseAuth.instance;
       if (auth.currentUser != null) {
         await auth.currentUser!.reload();
       }
