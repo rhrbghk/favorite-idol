@@ -1,4 +1,6 @@
 import 'package:favorite_idol/models/user_model.dart';
+import 'package:favorite_idol/theme/colors.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
@@ -215,8 +217,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color:
-                                    isMe ? Colors.blue[100] : Colors.grey[200],
+                                color: isMe
+                                    ? FAColors.faAccentColor
+                                    : Colors.grey[200],
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Column(
@@ -272,9 +275,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.send),
+                    icon: const Icon(CupertinoIcons.arrow_up_circle_fill),
+                    iconSize: 36,
+                    color: FAColors.faAccentColor,
                     onPressed: _sendMessage,
-                    color: Theme.of(context).primaryColor,
                   ),
                 ],
               ),

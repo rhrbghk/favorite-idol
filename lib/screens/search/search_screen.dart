@@ -6,6 +6,7 @@ import 'package:favorite_idol/models/widget/comments/comment_bottom_sheet.dart';
 import 'package:favorite_idol/providers/auth_provider.dart';
 import 'package:favorite_idol/screens/posts/create_post_screen.dart';
 import 'package:favorite_idol/theme/colors.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -530,8 +531,8 @@ class _SearchScreenState extends State<SearchScreen> {
       children: [
         IconButton(
           icon: Icon(
-            post.isLiked ? Icons.favorite : Icons.favorite_border,
-            color: post.isLiked ? Colors.red : null,
+            post.isLiked ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+            color: post.isLiked ? Colors.red : Colors.grey[600],
           ),
           onPressed: () async {
             try {
@@ -567,7 +568,8 @@ class _SearchScreenState extends State<SearchScreen> {
           },
         ),
         IconButton(
-          icon: const Icon(Icons.chat_bubble_outline),
+          icon: const Icon(CupertinoIcons.bubble_left),
+          color: Colors.grey[600],
           onPressed: () {
             showModalBottomSheet(
               context: context,

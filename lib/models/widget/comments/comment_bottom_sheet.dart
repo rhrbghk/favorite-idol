@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 
-
 class CommentBottomSheet extends StatefulWidget {
   final PostModel post;
 
@@ -132,18 +131,25 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                           .get(),
                       builder: (context, userSnapshot) {
                         final userName = userSnapshot.hasData
-                            ? (userSnapshot.data!.data() as Map<String, dynamic>)['nickname'] ?? '알 수 없는 사용자'
+                            ? (userSnapshot.data!.data()
+                                    as Map<String, dynamic>)['nickname'] ??
+                                '알 수 없는 사용자'
                             : '로딩 중...';
                         final timestamp = comment['createdAt'] as Timestamp?;
 
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundImage: userSnapshot.hasData &&
-                                (userSnapshot.data!.data() as Map<String, dynamic>)['profileImage'] != null
-                                ? NetworkImage((userSnapshot.data!.data() as Map<String, dynamic>)['profileImage'])
+                                    (userSnapshot.data!.data() as Map<String,
+                                            dynamic>)['profileImage'] !=
+                                        null
+                                ? NetworkImage((userSnapshot.data!.data()
+                                    as Map<String, dynamic>)['profileImage'])
                                 : null,
                             child: !userSnapshot.hasData ||
-                                (userSnapshot.data!.data() as Map<String, dynamic>)['profileImage'] == null
+                                    (userSnapshot.data!.data() as Map<String,
+                                            dynamic>)['profileImage'] ==
+                                        null
                                 ? const Icon(Icons.person)
                                 : null,
                           ),
@@ -213,6 +219,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
       ),
     );
   }
+
   String _formatTimestamp(Timestamp? timestamp) {
     if (timestamp == null) return '';
 
