@@ -1,5 +1,5 @@
 PODS:
-  - cloud_firestore (5.6.1):
+  - cloud_firestore (5.6.0):
     - Firebase/Firestore (= 11.6.0)
     - firebase_core
     - Flutter
@@ -14,14 +14,14 @@ PODS:
   - Firebase/Storage (11.6.0):
     - Firebase/CoreOnly
     - FirebaseStorage (~> 11.6.0)
-  - firebase_auth (5.4.0):
+  - firebase_auth (5.3.4):
     - Firebase/Auth (= 11.6.0)
     - firebase_core
     - Flutter
-  - firebase_core (3.10.0):
+  - firebase_core (3.9.0):
     - Firebase/CoreOnly (= 11.6.0)
     - Flutter
-  - firebase_storage (12.4.0):
+  - firebase_storage (12.3.7):
     - Firebase/Storage (= 11.6.0)
     - firebase_core
     - Flutter
@@ -243,6 +243,6 @@ SPEC CHECKSUMS:
   sign_in_with_apple: c5dcc141574c8c54d5ac99dd2163c0c72ad22418
   webview_flutter_wkwebview: 44d4dee7d7056d5ad185d25b38404436d56c547c
 
-PODFILE CHECKSUM: c8c7481432182b85c4311a14aae2f17372eadefd
+PODFILE CHECKSUM: 3884e5891772671e24cb3fac1bf29c8b66d0d163
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.15.2
