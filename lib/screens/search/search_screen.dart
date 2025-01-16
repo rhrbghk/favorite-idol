@@ -5,6 +5,8 @@ import 'package:favorite_idol/models/user_model.dart';
 import 'package:favorite_idol/models/widget/comments/comment_bottom_sheet.dart';
 import 'package:favorite_idol/providers/auth_provider.dart';
 import 'package:favorite_idol/screens/posts/create_post_screen.dart';
+import 'package:favorite_idol/theme/colors.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -81,7 +83,8 @@ class _SearchScreenState extends State<SearchScreen> {
                             });
                           }
                         },
-                        child: Text(imageFile == null ? '프로필 이미지 선택' : '이미지 변경'),
+                        child:
+                            Text(imageFile == null ? '프로필 이미지 선택' : '이미지 변경'),
                       ),
                     ],
                   ),
@@ -128,9 +131,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   );
 
                   // 이미지 업로드
-                  final storageRef = FirebaseStorage.instance
-                      .ref()
-                      .child('categories/${DateTime.now().millisecondsSinceEpoch}.jpg');
+                  final storageRef = FirebaseStorage.instance.ref().child(
+                      'categories/${DateTime.now().millisecondsSinceEpoch}.jpg');
 
                   await storageRef.putFile(
                     imageFile!,
@@ -140,9 +142,12 @@ class _SearchScreenState extends State<SearchScreen> {
                   final imageUrl = await storageRef.getDownloadURL();
 
                   // 트랜잭션으로 카테고리와 채팅방 동시에 생성
-                  await FirebaseFirestore.instance.runTransaction((transaction) async {
+                  await FirebaseFirestore.instance
+                      .runTransaction((transaction) async {
                     // 1. 카테고리 추가
-                    final categoryRef = FirebaseFirestore.instance.collection('categories').doc();
+                    final categoryRef = FirebaseFirestore.instance
+                        .collection('categories')
+                        .doc();
 
                     final categoryData = CategoryModel(
                       id: categoryRef.id,
@@ -204,14 +209,14 @@ class _SearchScreenState extends State<SearchScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: _selectedCategories.isEmpty
           ? FirebaseFirestore.instance
-          .collection('posts')
-          .orderBy('createdAt', descending: true)
-          .snapshots()
+              .collection('posts')
+              .orderBy('createdAt', descending: true)
+              .snapshots()
           : FirebaseFirestore.instance
-          .collection('posts')
-          .where('categoryId', whereIn: _selectedCategories.toList())
-          .orderBy('createdAt', descending: true)
-          .snapshots(),
+              .collection('posts')
+              .where('categoryId', whereIn: _selectedCategories.toList())
+              .orderBy('createdAt', descending: true)
+              .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(child: Text('에러가 발생했습니다: ${snapshot.error}'));
@@ -239,7 +244,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   .doc(context.read<AuthProvider>().user?.uid)
                   .snapshots(),
               builder: (context, likeSnapshot) {
-                final isLiked = likeSnapshot.hasData && likeSnapshot.data!.exists;
+                final isLiked =
+                    likeSnapshot.hasData && likeSnapshot.data!.exists;
                 final post = PostModel.fromMap(
                   doc.data() as Map<String, dynamic>,
                   doc.id,
@@ -258,6 +264,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
       elevation: 0,
+      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -367,7 +374,8 @@ class _SearchScreenState extends State<SearchScreen> {
                       // 이미지 삭제
                       for (String imageUrl in post.imageUrls) {
                         try {
-                          final ref = FirebaseStorage.instance.refFromURL(imageUrl);
+                          final ref =
+                              FirebaseStorage.instance.refFromURL(imageUrl);
                           await ref.delete();
                         } catch (e) {
                           print('Error deleting image: $e');
@@ -408,7 +416,8 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                           ListTile(
                             title: const Text('불건전한 내용'),
-                            onTap: () => Navigator.pop(context, 'inappropriate'),
+                            onTap: () =>
+                                Navigator.pop(context, 'inappropriate'),
                           ),
                           ListTile(
                             title: const Text('혐오 발언'),
@@ -425,7 +434,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
                   if (reason != null && post.id != null && context.mounted) {
                     try {
-                      await FirebaseFirestore.instance.collection('reports').add({
+                      await FirebaseFirestore.instance
+                          .collection('reports')
+                          .add({
                         'postId': post.id,
                         'reporterId': currentUser?.uid,
                         'reason': reason,
@@ -493,7 +504,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.black54,
                       borderRadius: BorderRadius.circular(12),
@@ -519,15 +531,16 @@ class _SearchScreenState extends State<SearchScreen> {
       children: [
         IconButton(
           icon: Icon(
-            post.isLiked ? Icons.favorite : Icons.favorite_border,
-            color: post.isLiked ? Colors.red : null,
+            post.isLiked ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+            color: post.isLiked ? Colors.red : Colors.grey[600],
           ),
           onPressed: () async {
             try {
               final currentUser = context.read<AuthProvider>().user;
               if (currentUser == null) return;
 
-              final postRef = FirebaseFirestore.instance.collection('posts').doc(post.id);
+              final postRef =
+                  FirebaseFirestore.instance.collection('posts').doc(post.id);
               final likeRef = postRef.collection('likes').doc(currentUser.uid);
 
               if (post.isLiked) {
@@ -554,9 +567,9 @@ class _SearchScreenState extends State<SearchScreen> {
             }
           },
         ),
-
         IconButton(
-          icon: const Icon(Icons.chat_bubble_outline),
+          icon: const Icon(CupertinoIcons.bubble_left),
+          color: Colors.grey[600],
           onPressed: () {
             showModalBottomSheet(
               context: context,
@@ -600,7 +613,10 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
         titleSpacing: 0,
         title: const Text('아이돌 갤러리'),
         leadingWidth: 50,
@@ -616,7 +632,8 @@ class _SearchScreenState extends State<SearchScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const CreatePostScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const CreatePostScreen()),
               );
             },
           ),
@@ -632,21 +649,39 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Column(
         children: [
           const UserAccountsDrawerHeader(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0XFFefb8da), Colors.white],
+              ),
+            ),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
               child: Icon(Icons.person),
             ),
-            accountName: Text('카테고리 필터'),
+            accountName: Text('카테고리 필터', style: TextStyle(color: Colors.black)),
             accountEmail: null,
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: '아이돌 검색...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Color(0XFFefb8da)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide:
+                      const BorderSide(color: Color(0XFFefb8da), width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onChanged: (value) {
                 setState(() {
@@ -656,7 +691,8 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.add_circle, color: Colors.blue),
+            leading:
+                const Icon(Icons.add_circle, color: FAColors.faAccentColor),
             title: const Text('나만의 아이돌 추가'),
             onTap: () {
               Navigator.pop(context); // 드로어 닫기
@@ -682,7 +718,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
         final categories = snapshot.data!.docs
             .where((doc) =>
-            (doc['name'] as String).toLowerCase().contains(_searchQuery))
+                (doc['name'] as String).toLowerCase().contains(_searchQuery))
             .toList();
 
         return ListView.builder(
