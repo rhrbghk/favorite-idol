@@ -1,8 +1,10 @@
 import 'package:favorite_idol/models/post_model.dart';
 import 'package:favorite_idol/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'package:favorite_idol/theme/colors.dart';
 
 class CommentBottomSheet extends StatefulWidget {
   final PostModel post;
@@ -96,6 +98,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
+                  color: Colors.grey[600],
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -181,38 +184,44 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
               },
             ),
           ),
-          // 댓글 입력
-          Container(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 8,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 8,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                top: BorderSide(color: Colors.grey[300]!),
+          SafeArea(
+            child: Container(
+              padding: EdgeInsets.only(
+                left: 8,
+                right: 8,
+                top: 8,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 8,
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _commentController,
-                    decoration: const InputDecoration(
-                      hintText: '댓글을 입력하세요...',
-                      border: InputBorder.none,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: Colors.grey[300]!),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      decoration: const InputDecoration(
+                        hintText: '댓글을 입력하세요...',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      maxLines: null,
                     ),
-                    maxLines: null,
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _addComment,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(CupertinoIcons.arrow_up_circle_fill),
+                    iconSize: 36,
+                    color: FAColors.faAccentColor,
+                    onPressed: _addComment,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
