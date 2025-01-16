@@ -27,15 +27,6 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 12,
-        ),
         currentIndex: _selectedIndex,
         onTap: (index) {
           setState(() {
