@@ -5,6 +5,7 @@ import 'package:favorite_idol/models/user_model.dart';
 import 'package:favorite_idol/models/widget/comments/comment_bottom_sheet.dart';
 import 'package:favorite_idol/providers/auth_provider.dart';
 import 'package:favorite_idol/screens/posts/create_post_screen.dart';
+import 'package:favorite_idol/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -646,21 +647,39 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Column(
         children: [
           const UserAccountsDrawerHeader(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0XFFefb8da), Colors.white],
+              ),
+            ),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
               child: Icon(Icons.person),
             ),
-            accountName: Text('카테고리 필터'),
+            accountName: Text('카테고리 필터', style: TextStyle(color: Colors.black)),
             accountEmail: null,
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: '아이돌 검색...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Color(0XFFefb8da)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide:
+                      const BorderSide(color: Color(0XFFefb8da), width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onChanged: (value) {
                 setState(() {
@@ -670,7 +689,8 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.add_circle, color: Colors.blue),
+            leading:
+                const Icon(Icons.add_circle, color: FAColors.faAccentColor),
             title: const Text('나만의 아이돌 추가'),
             onTap: () {
               Navigator.pop(context); // 드로어 닫기

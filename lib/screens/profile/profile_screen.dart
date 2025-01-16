@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:favorite_idol/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
@@ -106,7 +107,7 @@ class ProfileScreen extends StatelessWidget {
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  (route) => false,
+              (route) => false,
             );
           }
         }
@@ -166,9 +167,10 @@ class ProfileScreen extends StatelessWidget {
                           CircleAvatar(
                             radius: 50,
                             backgroundColor: Colors.grey[200],
-                            backgroundImage: userData.profileImage?.isNotEmpty == true
-                                ? NetworkImage(userData.profileImage!)
-                                : null,
+                            backgroundImage:
+                                userData.profileImage?.isNotEmpty == true
+                                    ? NetworkImage(userData.profileImage!)
+                                    : null,
                             child: userData.profileImage?.isNotEmpty != true
                                 ? const Icon(Icons.person, size: 50)
                                 : null,
@@ -204,6 +206,7 @@ class ProfileScreen extends StatelessWidget {
                     _buildMenuItem(
                       icon: Icons.favorite,
                       title: '좋아요 목록',
+                      iconColor: Colors.red,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -215,6 +218,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     _buildMenuItem(
                       icon: Icons.history,
+                      iconColor: Colors.green[300],
                       title: '활동 내역',
                       onTap: () {
                         Navigator.push(
@@ -228,6 +232,7 @@ class ProfileScreen extends StatelessWidget {
                     _buildMenuItem(
                       icon: Icons.edit,
                       title: '프로필 수정',
+                      iconColor: Colors.blue[300],
                       onTap: () {
                         Navigator.push(
                           context,
@@ -239,6 +244,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     _buildMenuItem(
                       icon: Icons.star,
+                      iconColor: FAColors.faAccentColor,
                       title: '내 아이돌 선택하기',
                       onTap: () {
                         Navigator.push(
@@ -273,9 +279,10 @@ class ProfileScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
+    Color? iconColor,
   }) {
     return ListTile(
-      leading: Icon(icon),
+      leading: Icon(icon, color: iconColor),
       title: Text(title),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,

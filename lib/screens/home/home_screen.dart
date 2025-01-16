@@ -219,7 +219,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           IconButton(
-            icon: const Icon(Icons.notifications),
+            icon: Icon(
+              Icons.notifications,
+              color: Colors.yellow[700],
+            ),
             onPressed: () {
               // 알림 기능 구현
             },
@@ -632,7 +635,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(CupertinoIcons.bubble_left, size: 16),
+                        Icon(CupertinoIcons.bubble_left,
+                            size: 16, color: Colors.grey[600]),
                         const SizedBox(width: 4),
                         Text(
                           '${post.comments}',
