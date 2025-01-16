@@ -582,75 +582,93 @@ class _HomeScreenState extends State<HomeScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(8)),
-                child: post.imageUrls.isNotEmpty
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              children: [
+                post.imageUrls.isNotEmpty
                     ? Image.network(
                         post.imageUrls[0],
-                        height: 120,
+                        height: 200, // 이미지 높이를 카드 전체 높이로 조정
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
-                            height: 120,
+                            height: 200,
                             color: Colors.grey[200],
                             child: const Icon(Icons.error),
                           );
                         },
                       )
                     : Container(
-                        height: 120,
+                        height: 200,
                         color: Colors.grey[200],
                         child: const Icon(Icons.image),
                       ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      post.caption,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        height: 1.2,
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.7),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.favorite, color: Colors.red, size: 16),
-                        const SizedBox(width: 4),
                         Text(
-                          '${post.likes}',
+                          post.caption,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
+                            height: 1.2,
+                            color: Colors.white,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Icon(CupertinoIcons.bubble_left,
-                            size: 16, color: Colors.grey[600]),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${post.comments}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.favorite,
+                                color: Colors.red, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${post.likes}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(
+                              CupertinoIcons.bubble_left,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${post.comments}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
