@@ -1,6 +1,5 @@
 PODS:
   - cloud_firestore (5.6.1):
-  - cloud_firestore (5.6.1):
     - Firebase/Firestore (= 11.6.0)
     - firebase_core
     - Flutter
@@ -16,15 +15,12 @@ PODS:
     - Firebase/CoreOnly
     - FirebaseStorage (~> 11.6.0)
   - firebase_auth (5.4.0):
-  - firebase_auth (5.4.0):
     - Firebase/Auth (= 11.6.0)
     - firebase_core
     - Flutter
   - firebase_core (3.10.0):
-  - firebase_core (3.10.0):
     - Firebase/CoreOnly (= 11.6.0)
     - Flutter
-  - firebase_storage (12.4.0):
   - firebase_storage (12.4.0):
     - Firebase/Storage (= 11.6.0)
     - firebase_core
@@ -206,12 +202,11 @@ CHECKOUT OPTIONS:
 
 SPEC CHECKSUMS:
   cloud_firestore: 9aa00dac1dc5d3cc93c8cb6515056b038779e06a
-  cloud_firestore: f02547e5b28138821eb44a48e3c5f034ebb5411b
   Firebase: 374a441a91ead896215703a674d58cdb3e9d772b
-  firebase_auth: 223c0d5afbd4eba3cd202177ec872436437549ba
-  firebase_core: feb37e79f775c2bd08dd35e02d83678291317e10
-  firebase_storage: f976f1db24f7bcfdba40777be217dc65a27e98a9
-  FirebaseAppCheckInterop: 347aa09a805219a31249b58fc956888e9fcb314b
+  firebase_auth: ecd44c57a46c4942b58f13615e0bbb178ccff47a
+  firebase_core: 2337982fb78ee4d8d91e608b0a3d4f44346a93c8
+  firebase_storage: 6f87096e0769121a546fd7a46b16e2064846361c
+  FirebaseAppCheckInterop: 2376d3ec5cb4267facad4fe754ab4f301a5a519b
   FirebaseAuth: 0304982cfe00df8d49bf533bc4becd3de36c7122
   FirebaseAuthInterop: a6973d72aa242ea88ffb6be9c9b06c65455071da
   FirebaseCore: 48b0dd707581cf9c1a1220da68223fb0a562afaa
@@ -231,9 +226,9 @@ SPEC CHECKSUMS:
   google_mobile_ads: dc2b2a5884bef7ab2b4ff30022a513df5373e208
   GoogleUserMessagingPlatform: a8b56893477f67212fbc8411c139e61d463349f5
   GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
-  GTMSessionFetcher: 923b710231ad3d6f3f0495ac1ced35421e07d9a6
-  image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
-  kakao_flutter_sdk_common: 4f10f98226da5d0f7cbdeeaed5cc21f144515209
+  GTMSessionFetcher: 4cb0aa086996858328a1fca61f9bfe81cfdfdfa9
+  image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
+  kakao_flutter_sdk_common: 7747df5fa2bf4cfcdc7aaa9ec260eb5e89e05f75
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
@@ -244,5 +239,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: c8c7481432182b85c4311a14aae2f17372eadefd
 
-COCOAPODS: 1.16.2
 COCOAPODS: 1.16.2
